@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WheelPro - Alignment & Repair Management</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        b1: '#0b0d13',
+        b2: '#111520',
+        b3: '#181d2a',
+        b4: '#212838',
+        b5: '#2a3348',
+        accent: '#f97316',
+        accentL: '#fb923c',
+        accentD: '#c2410c',
+        info: '#06b6d4',
+        ok: '#10b981',
+        warn: '#eab308',
+        err: '#ef4444',
+        tx: '#e2e8f0',
+        tx2: '#8896b3',
+        brd: '#252d42'
+      },
+      fontFamily: {
+        display: ['Space Grotesk', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace']
+      }
+    }
+  }
+};
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;scrollbar-width:thin;scrollbar-color:#2a3348 transparent}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2a3348;border-radius:3px}
+body{font-family:'Space Grotesk',sans-serif;background:#0b0d13;color:#e2e8f0;overflow:hidden;height:100vh}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;cursor:pointer;transition:all .2s;color:#8896b3;font-weight:500;font-size:14px}
+.sb-item:hover{background:#181d2a;color:#e2e8f0}
+.sb-item.act{background:linear-gradient(135deg,#f97316,#c2410c);color:#fff;box-shadow:0 4px 20px rgba(249,115,22,.3)}
+.kpi{background:linear-gradient(145deg,#181d2a,#1e2436);border:1px solid #252d42;border-radius:16px;padding:20px 24px;position:relative;overflow:hidden;transition:transform .2s}
+.kpi:hover{transform:translateY(-2px)}
+.kcol{min-width:260px;flex:1;background:#111520;border-radius:14px;border:1px solid #252d42;display:flex;flex-direction:column;max-height:calc(100vh - 310px)}
+.kcard{background:#181d2a;border:1px solid #252d42;border-radius:12px;padding:14px;cursor:pointer;transition:all .2s}
+.kcard:hover{border-color:#f97316;transform:translateY(-1px)}
+.tog{width:44px;height:24px;border-radius:12px;background:#2a3348;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.tog.on{background:#f97316}
+.tog::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s}
+.tog.on::after{transform:translateX(20px)}
+.stp{display:inline-flex;align-items:center;border:1px solid #252d42;border-radius:8px;overflow:hidden}
+.stp button{width:32px;height:32px;background:#212838;border:none;color:#e2e8f0;cursor:pointer;font-size:14px;transition:background .15s}
+.stp button:hover{background:#f97316;color:#fff}
+.stp span{width:36px;text-align:center;background:#181d2a;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:32px}
+.szb{width:48px;height:36px;border-radius:8px;border:1px solid #252d42;background:#181d2a;color:#8896b3;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.szb:hover{border-color:#f97316;color:#e2e8f0}
+.szb.act{background:#f97316;color:#fff;border-color:#f97316}
+.tpos{width:50px;height:50px;border-radius:50%;border:2px solid #2a3348;background:#181d2a;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#8896b3;transition:all .2s}
+.tpos:hover{border-color:#f97316}
+.tpos.sel{background:#f97316;border-color:#f97316;color:#fff}
+.bp{background:linear-gradient(135deg,#f97316,#c2410c);color:#fff;border:none;padding:10px 24px;border-radius:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;box-shadow:0 4px 16px rgba(249,115,22,.25)}
+.bp:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(249,115,22,.35)}
+.bs{background:#212838;color:#e2e8f0;border:1px solid #252d42;padding:10px 24px;border-radius:10px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.bs:hover{background:#2a3348;border-color:#f97316}
+.bdg{display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.bdg-waiting{background:rgba(234,179,8,.15);color:#eab308}
+.bdg-in-progress{background:rgba(6,182,212,.15);color:#06b6d4}
+.bdg-ready{background:rgba(16,185,129,.15);color:#10b981}
+.bdg-completed{background:rgba(139,92,246,.15);color:#a78bfa}
+.inf{background:#141720;border:1px solid #252d42;color:#e2e8f0;padding:10px 14px;border-radius:10px;font-family:inherit;font-size:14px;width:100%;transition:border-color .2s;outline:none}
+.inf:focus{border-color:#f97316}
+.inf::placeholder{color:#4a5678}
+select.inf{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238896b3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.toast{position:fixed;top:24px;right:24px;z-index:9999;padding:14px 24px;border-radius:12px;font-weight:500;animation:si .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+@keyframes si{from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.rdot{animation:pulse 1s infinite}
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.svc{background:#141720;border:1px solid #252d42;border-radius:12px;padding:16px;transition:all .2s}
+.svc.on{border-color:#f97316;background:#1a1510}
+.gline{height:2px;background:linear-gradient(90deg,transparent,#f97316,transparent);opacity:.3}
+.mobnav{display:none}
+.est-shell{max-width:1120px;margin:0 auto;padding-bottom:120px}
+.est-card{background:linear-gradient(180deg,rgba(25,30,41,.95),rgba(19,23,32,.95));border:1px solid #2a3142;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.est-step{position:relative;display:flex;align-items:center;gap:12px;color:#667085;font-weight:600}
+.est-step::after{content:'';position:absolute;left:54px;top:16px;width:calc(100% - 68px);height:1px;background:#31394a}
+.est-step:last-child::after{display:none}
+.est-bubble{width:34px;height:34px;border-radius:12px;background:#2a3142;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#98a2b3}
+.est-step.done .est-bubble{background:rgba(16,185,129,.18);color:#34d399;border:1px solid rgba(52,211,153,.45)}
+.est-step.active .est-bubble{background:rgba(249,115,22,.18);color:#fbbf24;border:1px solid rgba(249,115,22,.45)}
+.est-step.done,.est-step.active{color:#e5e7eb}
+.est-step small{display:block;color:#7c879b;font-size:11px;font-weight:500}
+.est-timeline{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.est-timeline::before{content:'';position:absolute;left:8%;right:8%;top:17px;height:2px;background:#31394a}
+.est-timeline-fill{position:absolute;left:8%;top:17px;height:2px;background:linear-gradient(90deg,#10b981,#f59e0b);border-radius:999px}
+.est-node{position:relative;text-align:center;padding-top:6px}
+.est-node .ring{width:34px;height:34px;border-radius:999px;background:#1b2130;border:2px solid #394150;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:#7c879b}
+.est-node.done .ring{border-color:#10b981;color:#34d399;background:rgba(16,185,129,.12)}
+.est-node.active .ring{border-color:#f59e0b;color:#f59e0b;background:rgba(245,158,11,.12)}
+.est-node .label{font-size:13px;font-weight:700;color:#e5e7eb}
+.est-node .meta{font-size:11px;color:#7c879b;margin-top:3px}
+.est-table th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#7c879b;font-weight:600}
+.est-table td{padding:16px 10px;border-top:1px solid rgba(255,255,255,.06);font-size:15px}
+.est-table tr:first-child td{border-top:1px solid rgba(255,255,255,.1)}
+.est-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:#171c27;border:1px solid #2b3242;color:#c9d1e0;font-size:12px;font-weight:600}
+.est-actions{position:sticky;bottom:0;display:flex;justify-content:center;gap:14px;padding-top:20px;background:linear-gradient(180deg,rgba(11,13,19,0),rgba(11,13,19,.92) 28%,rgba(11,13,19,1))}
+@media (max-width: 1024px){
+  body{overflow:auto;height:auto;min-height:100vh}
+  #app{display:block;height:auto}
+  aside{display:none!important}
+  .mobnav{display:flex}
+  header{padding:12px 16px;height:auto;min-height:auto;flex-wrap:wrap}
+  main{padding:16px!important}
+  .kcol{min-width:290px}
+  .job-layout{flex-direction:column!important;height:auto!important}
+  .job-side{width:100%!important;min-width:0!important}
+  .job-sticky{left:0!important;flex-wrap:wrap;gap:12px;padding:14px 16px 20px}
+  .est-timeline{grid-template-columns:1fr 1fr}
+  .est-step::after{display:none}
+}
+@media print{
+  .nop{display:none!important}
+  .pon{display:block!important}
+  body{background:#fff;color:#000;overflow:visible}
+}
+.pon{display:none}
+</style>
+</head>
+<body>
+<div id="app" class="flex h-screen">
+  <aside class="nop w-[220px] min-w-[220px] h-full bg-b2 border-r border-brd flex flex-col py-4 px-3">
+    <div class="flex items-center gap-3 px-3 mb-6">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-accentD flex items-center justify-center">
+        <i class="fas fa-cog text-white text-sm"></i>
+      </div>
+      <div>
+        <div class="text-sm font-bold text-tx leading-tight">WheelPro</div>
+        <div class="text-[10px] text-tx2 font-mono">v2.4</div>
+      </div>
+    </div>
+    <nav id="sideNav" class="flex flex-col gap-1 flex-1">
+      <div class="sb-item act" data-v="dashboard"><i class="fas fa-th-large w-5 text-center"></i>Dashboard</div>
+      <div class="sb-item" data-v="inventory"><i class="fas fa-warehouse w-5 text-center"></i>Inventory</div>
+      <div class="mt-2 px-3 mb-1 text-[10px] font-semibold text-tx2 uppercase tracking-wider">Management</div>
+      <div class="sb-item" data-v="customers"><i class="fas fa-users w-5 text-center"></i>Customers</div>
+      <div class="sb-item" data-v="reports"><i class="fas fa-chart-bar w-5 text-center"></i>Reports</div>
+    </nav>
+    <div class="border-t border-brd pt-3 mt-2">
+      <div class="px-3 mb-2 text-[10px] font-semibold text-tx2 uppercase tracking-wider">Branch</div>
+      <select id="branchSel" class="inf text-xs py-2 mb-2">
+        <option>Main Workshop</option>
+        <option>City Branch</option>
+        <option>Highway Point</option>
+      </select>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="nop h-16 min-h-[64px] bg-b2 border-b border-brd flex items-center px-6 gap-4">
+      <div class="relative flex-1 max-w-md">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-tx2 text-sm"></i>
+        <input id="gSearch" type="text" placeholder="Search customer, phone, vehicle..." class="inf pl-10 py-2 text-sm">
+        <div id="gResults" class="absolute top-full left-0 right-0 mt-1 bg-b3 border border-brd rounded-xl overflow-hidden z-50 hidden max-h-64 overflow-y-auto"></div>
+      </div>
+      <div class="mobnav w-full gap-2 overflow-x-auto">
+        <button class="bs text-xs py-2 px-4 mob-item" data-v="dashboard">Dashboard</button>
+        <button class="bs text-xs py-2 px-4 mob-item" data-v="inventory">Inventory</button>
+        <button class="bs text-xs py-2 px-4 mob-item" data-v="customers">Customers</button>
+        <button class="bs text-xs py-2 px-4 mob-item" data-v="reports">Reports</button>
+      </div>
+      <div class="flex items-center gap-3 ml-auto">
+        <div class="text-xs text-tx2 font-mono" id="clock"></div>
+      </div>
+    </header>
+    <main class="flex-1 overflow-auto p-6" id="mc"></main>
+  </div>
+</div>
+<div id="toasts"></div>
+<div id="modal"></div>
+
+<script>
+const MECHS = ['Ravi Kumar', 'Suresh Yadav', 'Amit Patel', 'Vikram Singh', 'Deepak Sharma'];
+const SVCS = [
+  {id:'alignment',name:'Wheel Alignment',price:1200,type:'toggle',hsn:'998714',gst:18,minutes:30},
+  {id:'balancing',name:'Wheel Balancing',price:400,type:'grid',hsn:'998714',gst:18,aprice:600,minutes:20},
+  {id:'fitting',name:'Tyre Fitting',price:200,type:'grid',hsn:'998714',gst:18,aprice:350,minutes:20},
+  {id:'nitrogen',name:'Nitrogen Gas',price:50,type:'count',hsn:'998714',gst:18,minutes:5},
+  {id:'puncture',name:'Puncture Repair',price:150,type:'visual',hsn:'998714',gst:18,minutes:15},
+  {id:'patch',name:'Tyre Patch',price:200,type:'stepper',hsn:'998714',gst:18,minutes:10}
+];
+const SIZES = ['12', '13', '14', '15', '16', '17', '18', '19'];
+const INV = [
+  {id:1,sz:'155/80 R13',mdl:'ZVTV',mfg:'MRF',pr:3200,stk:8,hsn:'40111000'},
+  {id:2,sz:'165/80 R14',mdl:'ZLX',mfg:'MRF',pr:3800,stk:12,hsn:'40111000'},
+  {id:3,sz:'185/65 R15',mdl:'Ecopia',mfg:'Bridgestone',pr:5200,stk:6,hsn:'40111000'},
+  {id:4,sz:'195/65 R15',mdl:'Potenza',mfg:'Bridgestone',pr:5800,stk:10,hsn:'40111000'},
+  {id:5,sz:'205/55 R16',mdl:'Primacy',mfg:'Michelin',pr:7200,stk:4,hsn:'40111000'},
+  {id:6,sz:'215/60 R16',mdl:'Energy',mfg:'Michelin',pr:7800,stk:7,hsn:'40111000'},
+  {id:7,sz:'225/55 R17',mdl:'Cinturato',mfg:'Pirelli',pr:9500,stk:3,hsn:'40111000'},
+  {id:8,sz:'245/45 R18',mdl:'Eagle',mfg:'Goodyear',pr:14200,stk:2,hsn:'40111000'}
+];
+
+let custs = [
+  {id:1,name:'Rajesh Kumar',ph:'9876543210',veh:'Maruti Swift',reg:'DL01AB1234',km:45000},
+  {id:2,name:'Priya Sharma',ph:'9876543211',veh:'Hyundai Creta',reg:'DL02CD5678',km:32000},
+  {id:3,name:'Mohammed Ali',ph:'9876543212',veh:'Toyota Fortuner',reg:'DL03EF9012',km:67000},
+  {id:4,name:'Sneha Patel',ph:'9876543213',veh:'Honda City',reg:'DL04GH3456',km:28000},
+  {id:5,name:'Vikram Reddy',ph:'9876543214',veh:'Mahindra XUV500',reg:'DL05IJ7890',km:54000}
+];
+
+let jobs = [
+  {id:1001,cid:1,st:'waiting',svcs:['alignment'],svcCfg:{alignment:{en:true}},tyres:[],mech:'Ravi Kumar',notes:'',at:new Date(Date.now()-3600000),memo:false,addS:[],veh:'Maruti Swift',reg:'DL01AB1234',recs:[]},
+  {id:1002,cid:2,st:'in-progress',svcs:['alignment','balancing'],svcCfg:{alignment:{en:true,mech:'Suresh Yadav'},balancing:{en:true,alloy:false,size:'15',mech:'Suresh Yadav'}},tyres:[{...INV[3],qty:4}],mech:'Suresh Yadav',notes:'Front left worn',at:new Date(Date.now()-7200000),memo:false,addS:[],veh:'Hyundai Creta',reg:'DL02CD5678',recs:[]},
+  {id:1003,cid:3,st:'in-progress',svcs:['balancing','nitrogen'],svcCfg:{balancing:{en:true,alloy:true,size:'17',mech:'Amit Patel'},nitrogen:{en:true,count:4,mech:'Amit Patel'}},tyres:[],mech:'Amit Patel',notes:'',at:new Date(Date.now()-5400000),memo:false,addS:[],veh:'Toyota Fortuner',reg:'DL03EF9012',recs:[]},
+  {id:1004,cid:5,st:'ready',svcs:['alignment','puncture'],svcCfg:{alignment:{en:true,mech:'Vikram Singh'},puncture:{en:true,positions:['RL','RR'],mech:'Vikram Singh'}},tyres:[],mech:'Vikram Singh',notes:'Two punctures rear',at:new Date(Date.now()-9000000),memo:false,addS:[],veh:'Mahindra XUV500',reg:'DL05IJ7890',recs:[]},
+  {id:1005,cid:4,st:'completed',svcs:['fitting'],svcCfg:{fitting:{en:true,alloy:false,size:'15',mech:'Deepak Sharma'}},tyres:[{...INV[2],qty:4}],mech:'Deepak Sharma',notes:'',at:new Date(Date.now()-14400000),memo:false,addS:[],veh:'Honda City',reg:'DL04GH3456',recs:[]}
+];
+
+let nxJ = 1006, nxC = 6;
+let S = {
+  view:'dashboard',
+  step:1,
+  ej:null,
+  memo:false,
+  nj:makeNewJob(),
+  tq:1,
+  selTyre:null,
+  invF:'',
+  cstF:''
+};
+
+function makeNewJob() {
+  const svc = {};
+  SVCS.forEach(s => {
+    svc[s.id] = {en:false,alloy:false,size:null,count:0,positions:[],mech:''};
+  });
+  return {cid:null,nm:'',ph:'',veh:'',reg:'',km:'',svc,tyres:[],mech:'',notes:'',recs:[],addS:[]};
+}
+
+const fc = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+const ft = d => new Date(d).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+const fd = d => new Date(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+
+function toast(m, t='ok') {
+  const c = {
+    ok:'background:#10b981;color:#fff',
+    err:'background:#ef4444;color:#fff',
+    info:'background:#06b6d4;color:#fff'
+  };
+  const e = document.createElement('div');
+  e.className = 'toast';
+  e.style.cssText = c[t];
+  e.innerHTML = '<i class="fas fa-' + (t === 'ok' ? 'check-circle' : t === 'err' ? 'times-circle' : 'info-circle') + ' mr-2"></i>' + m;
+  document.getElementById('toasts').appendChild(e);
+  setTimeout(() => {
+    e.style.opacity = '0';
+    e.style.transition = 'opacity .3s';
+    setTimeout(() => e.remove(), 300);
+  }, 3000);
+}
+
+function normalizeSvcCfg(id, cfg = {}) {
+  return {
+    en: !!cfg.en,
+    alloy: !!cfg.alloy,
+    size: cfg.size || null,
+    count: Number(cfg.count || 0),
+    positions: Array.isArray(cfg.positions) ? [...cfg.positions] : [],
+    mech: cfg.mech || ''
+  };
+}
+
+function svcPrice(id, cfg = {}) {
+  const s = SVCS.find(x => x.id === id);
+  if (!s) return 0;
+  const c = normalizeSvcCfg(id, cfg);
+  if (id === 'alignment') return s.price;
+  if (id === 'balancing' || id === 'fitting') return c.alloy ? s.aprice : s.price;
+  if (id === 'nitrogen') return s.price * c.count;
+  if (id === 'puncture') return s.price * c.positions.length;
+  if (id === 'patch') return s.price * c.count;
+  return s.price;
+}
+
+function calc(job) {
+  let ss = 0, ts = 0, sg = 0, tg = 0;
+  if (job.svc) {
+    Object.entries(job.svc).forEach(([k, v]) => {
+      if (v && v.en) {
+        const p = svcPrice(k, v);
+        const s = SVCS.find(x => x.id === k);
+        if (s) {
+          ss += p;
+          sg += p * (s.gst / 100);
+        }
+      }
+    });
+  } else if (job.svcs && Array.isArray(job.svcs)) {
+    job.svcs.forEach(k => {
+      const s = SVCS.find(x => x.id === k);
+      const cfg = job.svcCfg && job.svcCfg[k] ? job.svcCfg[k] : {en:true};
+      if (s) {
+        const p = svcPrice(k, cfg);
+        ss += p;
+        sg += p * (s.gst / 100);
+      }
+    });
+  }
+  if (job.addS && job.addS.length) {
+    job.addS.forEach(a => {
+      const line = Number(a.price || 0) * Number(a.qty || 0);
+      ss += line;
+      sg += line * 0.18;
+    });
+  }
+  if (job.tyres && job.tyres.length) {
+    job.tyres.forEach(t => {
+      const line = Number(t.pr || 0) * Number(t.qty || 0);
+      ts += line;
+      tg += line * 0.28;
+    });
+  }
+  const tot = ss + ts + sg + tg;
+  return {ss, ts, sg, tg, tot, cgs:sg/2, sgs:sg/2, cgt:tg/2, sgt:tg/2};
+}
+
+function estMinutes(job) {
+  let total = 0;
+  Object.entries(job.svc || {}).forEach(([id, cfg]) => {
+    if (!cfg.en) return;
+    const svc = SVCS.find(s => s.id === id);
+    if (!svc) return;
+    if (id === 'nitrogen' || id === 'patch') total += (cfg.count || 0) * svc.minutes;
+    else if (id === 'puncture') total += (cfg.positions || []).length * svc.minutes;
+    else total += svc.minutes;
+  });
+  total += (job.tyres || []).reduce((sum, tyre) => sum + tyre.qty * 10, 0);
+  total += (job.addS || []).reduce((sum, item) => sum + item.qty * 10, 0);
+  return total;
+}
+
+function primaryMechanic(job) {
+  const fromCfg = Object.values(job.svc || {}).find(v => v && v.mech);
+  if (fromCfg) return fromCfg.mech;
+  if (job.svcCfg) {
+    const found = Object.values(job.svcCfg).find(v => v && v.mech);
+    if (found) return found.mech;
+  }
+  return job.mech || 'Unassigned';
+}
+
+function jobServiceNames(job) {
+  if (job.svcs) return job.svcs.map(id => SVCS.find(s => s.id === id)?.name || id);
+  return Object.entries(job.svc).filter(([, cfg]) => cfg.en).map(([id]) => SVCS.find(s => s.id === id)?.name || id);
+}
+
+function lineItemsFromJob(job) {
+  const items = [];
+  const svcCfg = job.svcCfg || {};
+  (job.svcs || []).forEach(id => {
+    const svc = SVCS.find(s => s.id === id);
+    if (!svc) return;
+    const cfg = normalizeSvcCfg(id, svcCfg[id] || {en:true});
+    let qty = 1;
+    let rate = svc.price;
+    let name = svc.name;
+    if (id === 'balancing' || id === 'fitting') {
+      name += cfg.alloy ? ' (Alloy)' : '';
+      qty = Math.max(1, job.tyres.reduce((sum, tyre) => sum + tyre.qty, 0) || 1);
+      rate = qty ? svcPrice(id, cfg) / qty : svcPrice(id, cfg);
+    } else if (id === 'nitrogen' || id === 'patch') {
+      qty = Math.max(1, cfg.count || 1);
+      rate = svc.price;
+    } else if (id === 'puncture') {
+      qty = Math.max(1, (cfg.positions || []).length || 1);
+      rate = svc.price;
+    } else {
+      rate = svcPrice(id, cfg);
+    }
+    const base = qty * rate;
+    items.push({
+      name,
+      hsn:svc.hsn,
+      qty,
+      rate,
+      gst:svc.gst,
+      total:base + (base * svc.gst / 100),
+      base
+    });
+  });
+  (job.addS || []).forEach(a => {
+    const qty = Number(a.qty || 1);
+    const rate = Number(a.price || 0);
+    const base = qty * rate;
+    items.push({
+      name:a.name || 'Additional Service',
+      hsn:'998714',
+      qty,
+      rate,
+      gst:18,
+      total:base + (base * 0.18),
+      base
+    });
+  });
+  (job.tyres || []).forEach(ty => {
+    const qty = Number(ty.qty || 1);
+    const rate = Number(ty.pr || 0);
+    const base = qty * rate;
+    items.push({
+      name:`${ty.mfg} ${ty.mdl} (${ty.sz})`,
+      hsn:ty.hsn,
+      qty,
+      rate,
+      gst:28,
+      total:base + (base * 0.28),
+      base
+    });
+  });
+  return items;
+}
+
+function nav(v, d = {}) {
+  S.view = v;
+  if (d.memo !== undefined) S.memo = d.memo;
+  if (d.ej) S.ej = d.ej;
+  syncNavState();
+  render();
+}
+
+function syncNavState() {
+  document.querySelectorAll('#sideNav .sb-item').forEach(el => el.classList.toggle('act', el.dataset.v === S.view));
+}
+
+function render() {
+  const m = document.getElementById('mc');
+  let h = '';
+  switch (S.view) {
+    case 'dashboard': h = rDash(); break;
+    case 'inventory': h = rInv(); break;
+    case 'customers': h = rCust(); break;
+    case 'reports': h = rRep(); break;
+    case 'job-create': h = S.step === 1 ? rJ1() : rJ2(); break;
+    case 'job-detail': h = rJD(); break;
+    case 'invoice': h = rInvoice(); break;
+    default: h = rDash();
+  }
+  m.innerHTML = h;
+  syncNavState();
+}
+
+function rKPI(t, v, ic, cl) {
+  return `<div class="kpi">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-tx2 text-sm font-medium">${t}</span>
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:${cl}15">
+        <i class="fas ${ic}" style="color:${cl}"></i>
+      </div>
+    </div>
+    <div class="text-3xl font-bold text-tx font-mono">${v}</div>
+    <div style="position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;background:${cl};filter:blur(40px);opacity:.08"></div>
+  </div>`;
+}
+
+function rDash() {
+  const td = new Date();
+  const tj = jobs.filter(j => new Date(j.at).toDateString() === td.toDateString());
+  const og = jobs.filter(j => j.st === 'in-progress').length;
+  const cp = jobs.filter(j => j.st === 'completed' && new Date(j.at).toDateString() === td.toDateString());
+  const rv = jobs.filter(j => new Date(j.at).toDateString() === td.toDateString()).reduce((s, j) => s + calc(j).tot, 0);
+  return `<div class="space-y-6">
+    <div class="grid xl:grid-cols-4 md:grid-cols-2 gap-5">
+      ${rKPI('Total Jobs Today', tj.length, 'fa-clipboard-list', '#f97316')}
+      ${rKPI('Ongoing Jobs', og, 'fa-cogs', '#06b6d4')}
+      ${rKPI('Completed Jobs', cp.length, 'fa-check-circle', '#10b981')}
+      ${rKPI('Revenue Today', fc(Math.round(rv)), 'fa-rupee-sign', '#eab308')}
+    </div>
+    <div class="flex gap-4 flex-wrap">
+      <button class="bp flex items-center gap-2 text-sm py-3 px-6" data-action="startJC" data-memo="0"><i class="fas fa-plus-circle"></i>Create Job Card</button>
+      <button class="bs flex items-center gap-2 text-sm py-3 px-6" data-action="startJC" data-memo="1"><i class="fas fa-file-alt"></i>Create Memo Bill</button>
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-tx">Job Board</h2>
+      </div>
+      <div class="flex gap-4 overflow-x-auto pb-4">
+        ${rKCol('waiting', 'Waiting', 'fa-clock', '#eab308')}
+        ${rKCol('in-progress', 'In Progress', 'fa-cog fa-spin', '#06b6d4')}
+        ${rKCol('ready', 'Ready to Deliver', 'fa-check', '#10b981')}
+        ${rKCol('completed', 'Completed', 'fa-flag-checkered', '#a78bfa')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function rKCol(st, ttl, ic, cl) {
+  const cj = jobs.filter(j => j.st === st);
+  const so = ['waiting', 'in-progress', 'ready', 'completed'];
+  const idx = so.indexOf(st);
+  return `<div class="kcol">
+    <div class="p-4 pb-2 border-b border-brd">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fas ${ic} text-xs" style="color:${cl}"></i>
+          <span class="text-sm font-semibold text-tx">${ttl}</span>
+        </div>
+        <span class="w-6 h-6 rounded-full bg-b4 flex items-center justify-center text-xs font-mono text-tx2">${cj.length}</span>
+      </div>
+    </div>
+    <div class="p-3 space-y-3 overflow-y-auto flex-1">
+      ${cj.map(j => rKCard(j, idx, so)).join('')}
+      ${cj.length === 0 ? '<div class="text-center py-8 text-tx2 text-xs opacity-50">No jobs</div>' : ''}
+    </div>
+  </div>`;
+}
+
+function rKCard(j, idx, so) {
+  const c = custs.find(x => x.id === j.cid) || {name:'Walk-in', reg:j.reg || '', veh:j.veh || ''};
+  const sn = jobServiceNames(j).slice(0, 2);
+  const mr = jobServiceNames(j).length - 2;
+  return `<div class="kcard" data-action="viewJ" data-id="${j.id}">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[11px] font-mono text-tx2">#${j.id}</span>
+      <span class="text-[10px] text-tx2">${ft(j.at)}</span>
+    </div>
+    <div class="font-semibold text-sm text-tx mb-1">${c.name}</div>
+    <div class="text-xs text-tx2 mb-2"><i class="fas fa-car text-[10px] mr-1"></i>${c.reg}</div>
+    <div class="flex flex-wrap gap-1 mb-2">
+      ${sn.map(n => `<span class="text-[10px] bg-b4 px-2 py-0.5 rounded text-tx2">${n}</span>`).join('')}
+      ${mr > 0 ? `<span class="text-[10px] bg-b4 px-2 py-0.5 rounded text-accent">+${mr}</span>` : ''}
+    </div>
+    <div class="flex items-center justify-between">
+      <div class="text-xs text-tx2"><i class="fas fa-user-wrench text-[10px] mr-1 text-accent"></i>${primaryMechanic(j)}</div>
+      <div class="font-mono text-xs font-semibold text-accent">${fc(Math.round(calc(j).tot))}</div>
+    </div>
+    ${j.st !== 'completed' ? `<div class="flex gap-1 mt-3 pt-2 border-t border-brd">
+      ${idx > 0 ? `<button class="flex-1 text-[10px] py-1 rounded bg-b4 text-tx2 hover:bg-b5" data-action="mvJ" data-id="${j.id}" data-dir="-1"><i class="fas fa-arrow-left mr-1"></i>Back</button>` : ''}
+      ${idx < 3 ? `<button class="flex-1 text-[10px] py-1 rounded bg-accent/20 text-accent hover:bg-accent/30" data-action="mvJ" data-id="${j.id}" data-dir="1">Next<i class="fas fa-arrow-right ml-1"></i></button>` : ''}
+    </div>` : ''}
+  </div>`;
+}
+
+function rJ1() {
+  const m = S.memo;
+  return `<div class="max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+      <button class="w-9 h-9 rounded-lg bg-b3 flex items-center justify-center text-tx2 hover:text-tx" data-action="navDash"><i class="fas fa-arrow-left text-sm"></i></button>
+      <div>
+        <h1 class="text-xl font-bold text-tx">${m ? 'Create Memo Bill' : 'Create Job Card'}</h1>
+        <p class="text-sm text-tx2">Step 1 of 2 — Customer Details</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 mb-8">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold">1</div>
+        <span class="text-sm font-medium text-accent">Customer Info</span>
+      </div>
+      <div class="flex-1 h-0.5 bg-b4"></div>
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-b4 flex items-center justify-center text-tx2 text-xs font-bold">2</div>
+        <span class="text-sm text-tx2">Services</span>
+      </div>
+    </div>
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-tx2 mb-2">Search Existing Customer</label>
+      <div class="relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-tx2 text-sm"></i>
+        <input id="cSrc" type="text" placeholder="Type name or phone..." class="inf pl-10" oninput="srcC(this.value)">
+        <div id="cDrop" class="absolute top-full left-0 right-0 mt-1 bg-b3 border border-brd rounded-xl overflow-hidden z-50 hidden max-h-48 overflow-y-auto"></div>
+      </div>
+    </div>
+    <div class="gline mb-6"></div>
+    <div class="space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-tx2 mb-1.5">Customer Name ${m ? '<span class="text-tx2 text-xs">(optional)</span>' : '<span class="text-err">*</span>'}</label>
+          <input id="jNm" type="text" class="inf" value="${S.nj.nm}">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-tx2 mb-1.5">Phone Number ${m ? '<span class="text-tx2 text-xs">(optional)</span>' : '<span class="text-err">*</span>'}</label>
+          <input id="jPh" type="tel" class="inf" value="${S.nj.ph}">
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-tx2 mb-1.5">Vehicle Name <span class="text-err">*</span></label>
+          <input id="jVeh" type="text" class="inf" value="${S.nj.veh}">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-tx2 mb-1.5">Registration Number <span class="text-err">*</span></label>
+          <input id="jReg" type="text" class="inf" value="${S.nj.reg}" style="text-transform:uppercase">
+        </div>
+      </div>
+      <div class="md:w-1/2">
+        <label class="block text-sm font-medium text-tx2 mb-1.5">KM Reading</label>
+        <input id="jKm" type="number" class="inf" value="${S.nj.km}">
+      </div>
+    </div>
+    <div class="flex justify-between mt-8 pt-6 border-t border-brd">
+      <button class="bs" data-action="navDash">Cancel</button>
+      <button class="bp flex items-center gap-2" data-action="goS2">Continue <i class="fas fa-arrow-right"></i></button>
+    </div>
+  </div>`;
+}
+
+function rJ2() {
+  const j = S.nj;
+  const t = calc(j);
+  const et = estMinutes(j);
+  return `<div class="job-layout flex gap-4" style="height:calc(100vh - 112px)">
+    <div class="flex-1 overflow-y-auto pr-2 space-y-4 pb-24">
+      <div class="flex items-center gap-3 mb-2">
+        <button class="w-8 h-8 rounded-lg bg-b3 flex items-center justify-center text-tx2 hover:text-tx" data-action="backS1"><i class="fas fa-arrow-left text-xs"></i></button>
+        <div>
+          <h1 class="text-lg font-bold text-tx">${S.memo ? 'Memo Bill' : 'Job Card'} — Services</h1>
+          <p class="text-xs text-tx2">${j.nm || 'Walk-in'} · ${j.reg}</p>
+        </div>
+      </div>
+      ${SVCS.map(s => rSC(s, j)).join('')}
+      <div class="svc ${j.addS.length ? 'on' : ''}">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><i class="fas fa-plus text-accent text-xs"></i></div>
+          <div class="text-sm font-semibold text-tx">Additional Services</div>
+        </div>
+        <div class="space-y-2" id="addSList">
+          ${j.addS.map((a, i) => `<div class="flex items-center gap-2 flex-wrap">
+            <input type="text" class="inf flex-1 text-sm py-2" value="${a.name}" placeholder="Service name" data-action="uAS" data-i="${i}" data-k="name">
+            <div class="stp">
+              <button data-action="uASq" data-i="${i}" data-d="-1">-</button>
+              <span>${a.qty}</span>
+              <button data-action="uASq" data-i="${i}" data-d="1">+</button>
+            </div>
+            <input type="number" class="inf w-24 text-sm py-2 text-right font-mono" value="${a.price}" data-action="uAS" data-i="${i}" data-k="price">
+            <button class="w-8 h-8 rounded-lg bg-err/10 text-err flex items-center justify-center" data-action="rAS" data-i="${i}"><i class="fas fa-trash text-xs"></i></button>
+          </div>`).join('')}
+        </div>
+        <button class="mt-2 text-xs text-accent hover:text-accentL" data-action="aAS"><i class="fas fa-plus mr-1"></i>Add Service</button>
+      </div>
+
+      <div class="svc">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center"><i class="fas fa-stethoscope text-info text-xs"></i></div>
+          <div class="text-sm font-semibold text-tx">Mechanic Observation</div>
+        </div>
+        <textarea id="jNotes" class="inf text-sm min-h-[80px] resize-y" placeholder="Enter observations...">${j.notes}</textarea>
+        <div class="flex items-center gap-3 mt-3 flex-wrap">
+          <button id="recBtn" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-err/10 text-err text-sm font-medium hover:bg-err/20" data-action="togRec">
+            <i class="fas fa-microphone"></i><span>${isR ? 'Stop' : 'Record'}</span>
+          </button>
+          <div class="flex gap-2 flex-wrap">
+            ${j.recs.map((r, i) => `<div class="flex items-center gap-1 bg-b4 rounded-lg px-3 py-1.5">
+              <i class="fas fa-play text-[10px] text-accent cursor-pointer" data-action="playR" data-i="${i}"></i>
+              <span class="text-xs font-mono text-tx2">${r.dur}s</span>
+              <i class="fas fa-trash text-[10px] text-err cursor-pointer ml-1" data-action="delR" data-i="${i}"></i>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="job-side w-[360px] min-w-[360px] flex flex-col gap-4 pb-24">
+      <div class="bg-b2 border border-brd rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2 mb-1"><i class="fas fa-circle text-accent text-[8px]"></i><span class="text-sm font-semibold text-tx">Tyre Inventory</span></div>
+        <div>
+          <label class="text-xs text-tx2 mb-1 block">Tyre Size</label>
+          <select id="tSz" class="inf text-sm py-2" data-action="fMod">
+            <option value="">Select size</option>
+            ${[...new Set(INV.map(t => t.sz))].sort().map(s => `<option>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-tx2 mb-1 block">Model</label>
+          <select id="tMd" class="inf text-sm py-2" data-action="fMfg"><option value="">Select model</option></select>
+        </div>
+        <div>
+          <label class="text-xs text-tx2 mb-1 block">Manufacturer</label>
+          <select id="tMf" class="inf text-sm py-2" data-action="uTP"><option value="">Select manufacturer</option></select>
+        </div>
+        <div id="tPB" class="hidden">
+          <div class="flex items-center justify-between bg-b3 rounded-xl p-3">
+            <div>
+              <div class="text-xs text-tx2">Price / unit</div>
+              <div class="text-lg font-bold text-accent font-mono" id="tPr">—</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-tx2">Available Stock</div>
+              <div class="text-lg font-bold font-mono" id="tSt">—</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-tx2">Qty:</span>
+              <div class="stp">
+                <button data-action="cTQ" data-d="-1">-</button>
+                <span id="tQy">1</span>
+                <button data-action="cTQ" data-d="1">+</button>
+              </div>
+            </div>
+            <div class="text-xs text-ok" id="tAf"></div>
+          </div>
+          <button class="bp w-full mt-3 text-sm py-2" data-action="addTy"><i class="fas fa-plus mr-1"></i>Add to Job Card</button>
+        </div>
+      </div>
+
+      <div class="bg-b2 border border-brd rounded-2xl p-4 flex-1 overflow-y-auto">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-tx">Added Tyres</span>
+          <span class="text-xs font-mono text-accent">${fc(Math.round(t.ts))}</span>
+        </div>
+        ${j.tyres.length === 0 ? '<div class="text-center py-6 text-tx2 text-xs opacity-50">No tyres added</div>' : ''}
+        ${j.tyres.map((ty, i) => `<div class="flex items-center justify-between py-2 ${i > 0 ? 'border-t border-brd' : ''}">
+          <div>
+            <div class="text-xs font-medium text-tx">${ty.sz} ${ty.mdl}</div>
+            <div class="text-[10px] text-tx2">${ty.mfg} · ${fc(ty.pr)} × ${ty.qty}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono text-accent font-semibold">${fc(ty.pr * ty.qty)}</span>
+            <button class="text-err text-xs" data-action="rmTy" data-i="${i}"><i class="fas fa-times"></i></button>
+          </div>
+        </div>`).join('')}
+      </div>
+
+      <div class="bg-b2 border border-accent/20 rounded-2xl p-4">
+        <div class="text-sm font-semibold text-tx mb-3">Cost Preview</div>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between"><span class="text-tx2">Services subtotal</span><span class="font-mono text-tx">${fc(Math.round(t.ss))}</span></div>
+          <div class="flex justify-between"><span class="text-tx2">Tyres subtotal</span><span class="font-mono text-tx">${fc(Math.round(t.ts))}</span></div>
+          <div class="flex justify-between"><span class="text-tx2">CGST</span><span class="font-mono text-tx">${fc(Math.round(t.cgs + t.cgt))}</span></div>
+          <div class="flex justify-between"><span class="text-tx2">SGST</span><span class="font-mono text-tx">${fc(Math.round(t.sgs + t.sgt))}</span></div>
+          <div class="gline my-2"></div>
+          <div class="flex justify-between text-sm"><span class="font-bold text-tx">Total</span><span class="font-mono font-bold text-accent text-base">${fc(Math.round(t.tot))}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="job-sticky fixed bottom-0 left-[220px] right-0 bg-b2/95 backdrop-blur-xl border-t border-brd px-6 py-3 flex items-center z-50 nop">
+      <div class="flex items-center gap-6">
+        <div>
+          <div class="text-[10px] text-tx2 uppercase tracking-wider">Estimated Time</div>
+          <div class="text-sm font-bold font-mono text-tx">${et} min</div>
+        </div>
+        <div>
+          <div class="text-[10px] text-tx2 uppercase tracking-wider">Estimated Cost</div>
+          <div class="text-sm font-bold font-mono text-accent">${fc(Math.round(t.tot))}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 ml-auto flex-wrap">
+        <button class="bs text-sm py-2" data-action="saveJ" data-est="0"><i class="fas fa-save mr-1"></i>Save Draft</button>
+        <button class="bs text-sm py-2" data-action="saveJ" data-est="1"><i class="fas fa-file-invoice mr-1"></i>Generate Estimate</button>
+        <button class="bp text-sm py-2" data-action="confJ"><i class="fas fa-check-circle mr-1"></i>Confirm Job</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function rSC(s, j) {
+  const cfg = normalizeSvcCfg(s.id, j.svc[s.id] || {});
+  const on = cfg.en;
+  let ex = '';
+  const ic = {
+    alignment:'fa-bullseye',
+    balancing:'fa-balance-scale',
+    fitting:'fa-wrench',
+    nitrogen:'fa-wind',
+    puncture:'fa-tools',
+    patch:'fa-band-aid'
+  }[s.id];
+  const ps = s.type === 'grid' ? `${fc(s.price)} / ${fc(s.aprice)} (Alloy)` : s.type === 'count' || s.type === 'stepper' ? `${fc(s.price)}/unit` : fc(s.price);
+
+  if (on && s.type === 'grid') {
+    ex = `<div class="ml-11 mt-3 space-y-3">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-xs text-tx2">Type:</span>
+        <label class="text-xs ${!cfg.alloy ? 'text-accent' : 'text-tx2'} cursor-pointer"><input type="radio" name="${s.id}T" ${!cfg.alloy ? 'checked' : ''} data-action="sCfg" data-id="${s.id}" data-k="alloy" data-v="0" class="accent-[#f97316] mr-1">Normal</label>
+        <label class="text-xs ${cfg.alloy ? 'text-accent' : 'text-tx2'} cursor-pointer"><input type="radio" name="${s.id}T" ${cfg.alloy ? 'checked' : ''} data-action="sCfg" data-id="${s.id}" data-k="alloy" data-v="1" class="accent-[#f97316] mr-1">Alloy</label>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs text-tx2">Size:</span>
+        <div class="flex gap-1.5 flex-wrap">${SIZES.map(sz => `<button class="szb ${cfg.size === sz ? 'act' : ''}" data-action="sCfg" data-id="${s.id}" data-k="size" data-v="${sz}">${sz}"</button>`).join('')}</div>
+      </div>
+      ${mSel(s.id, cfg)}
+    </div>`;
+  }
+  if (on && s.type === 'count') {
+    ex = `<div class="ml-11 mt-2 flex items-center gap-4 flex-wrap">
+      <span class="text-xs text-tx2">Count:</span>
+      <div class="stp"><button data-action="sCfgN" data-id="${s.id}" data-d="-1">-</button><span>${cfg.count || 0}</span><button data-action="sCfgN" data-id="${s.id}" data-d="1">+</button></div>
+      ${cfg.count > 0 ? `<span class="text-sm font-mono text-accent">${fc(s.price * cfg.count)}</span>` : ''}
+      ${mSel(s.id, cfg)}
+    </div>`;
+  }
+  if (on && s.type === 'visual') {
+    const pos = cfg.positions || [];
+    ex = `<div class="ml-11 mt-2">
+      <div class="text-xs text-tx2 mb-2">Select punctured tyres:</div>
+      <div class="relative w-48 h-32 mx-auto">
+        <div class="absolute inset-x-8 inset-y-5 border-2 border-brd rounded-xl bg-b3/50"></div>
+        ${['FL', 'FR', 'RL', 'RR'].map(p => {
+          const topBottom = p[0] === 'F' ? 'top-0' : 'bottom-0';
+          const leftRight = p.endsWith('R') ? 'right-0' : 'left-0';
+          return `<div class="tpos ${pos.includes(p) ? 'sel' : ''} absolute ${topBottom} ${leftRight}" data-action="tPos" data-id="${s.id}" data-p="${p}">${p}</div>`;
+        }).join('')}
+        <div class="absolute inset-0 flex items-center justify-center"><div class="tpos ${pos.includes('SP') ? 'sel' : ''} w-10 h-10 text-[8px]" data-action="tPos" data-id="${s.id}" data-p="SP">SP</div></div>
+      </div>
+      ${pos.length ? `<div class="flex items-center justify-between mt-2 flex-wrap gap-2"><span class="text-xs text-tx2">Total: <span class="font-mono text-accent">${fc(s.price * pos.length)}</span></span>${mSel(s.id, cfg)}</div>` : mSel(s.id, cfg)}
+    </div>`;
+  }
+  if (on && s.type === 'stepper') {
+    ex = `<div class="ml-11 mt-2 flex items-center gap-4 flex-wrap">
+      <span class="text-xs text-tx2">Count:</span>
+      <div class="stp"><button data-action="sCfgN" data-id="${s.id}" data-d="-1">-</button><span>${cfg.count || 0}</span><button data-action="sCfgN" data-id="${s.id}" data-d="1">+</button></div>
+      ${cfg.count > 0 ? `<span class="text-sm font-mono text-accent">${fc(s.price * cfg.count)}</span>` : ''}
+      ${mSel(s.id, cfg)}
+    </div>`;
+  }
+
+  return `<div class="svc ${on ? 'on' : ''}">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><i class="fas ${ic} text-accent text-xs"></i></div>
+        <div>
+          <div class="text-sm font-semibold text-tx">${s.name}</div>
+          <div class="text-xs text-tx2 font-mono">${ps} · HSN/SAC: ${s.hsn}</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        ${s.type === 'toggle' && on ? mSel(s.id, cfg) : ''}
+        <div class="tog ${on ? 'on' : ''}" data-action="tSvc" data-id="${s.id}"></div>
+      </div>
+    </div>
+    ${ex}
+  </div>`;
+}
+
+function mSel(id, cfg) {
+  return `<select class="inf text-xs py-1.5 w-36" data-action="sCfgM" data-id="${id}">
+    <option value="">Mechanic</option>
+    ${MECHS.map(m => `<option value="${m}" ${cfg.mech === m ? 'selected' : ''}>${m}</option>`).join('')}
+  </select>`;
+}
+
+function rJD() {
+  const j = S.ej;
+  if (!j) return '<div class="text-center py-20 text-tx2">Job not found</div>';
+  const c = custs.find(x => x.id === j.cid) || {name:'Walk-in', ph:'', reg:j.reg || '', veh:j.veh || ''};
+  const t = calc(j);
+  const so = ['waiting', 'in-progress', 'ready', 'completed'];
+  const idx = so.indexOf(j.st);
+  return `<div class="max-w-3xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+      <button class="w-9 h-9 rounded-lg bg-b3 flex items-center justify-center text-tx2 hover:text-tx" data-action="navDash"><i class="fas fa-arrow-left text-sm"></i></button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-tx">Job #${j.id}</h1>
+        <p class="text-sm text-tx2">${c.name} · ${c.reg}</p>
+      </div>
+      <span class="bdg bdg-${j.st}">${j.st.replace('-', ' ').toUpperCase()}</span>
+    </div>
+    <div class="bg-b2 border border-brd rounded-2xl p-5 mb-4 grid md:grid-cols-3 gap-4 text-sm">
+      <div><span class="text-tx2 block text-xs mb-1">Customer</span><span class="font-medium text-tx">${c.name}</span></div>
+      <div><span class="text-tx2 block text-xs mb-1">Phone</span><span class="font-medium text-tx font-mono">${c.ph || '—'}</span></div>
+      <div><span class="text-tx2 block text-xs mb-1">Vehicle</span><span class="font-medium text-tx">${c.veh || j.veh}</span></div>
+      <div><span class="text-tx2 block text-xs mb-1">Reg No</span><span class="font-medium text-tx font-mono">${c.reg || j.reg}</span></div>
+      <div><span class="text-tx2 block text-xs mb-1">Assigned Mechanic</span><span class="font-medium text-tx">${primaryMechanic(j)}</span></div>
+      <div><span class="text-tx2 block text-xs mb-1">Created</span><span class="font-medium text-tx">${fd(j.at)} ${ft(j.at)}</span></div>
+    </div>
+    <div class="bg-b2 border border-brd rounded-2xl p-5 mb-4">
+      <h3 class="text-sm font-semibold text-tx mb-3">Services</h3>
+      ${jobServiceNames(j).map((name, i) => {
+        const id = j.svcs[i];
+        const cfg = (j.svcCfg && j.svcCfg[id]) || {en:true};
+        return `<div class="flex items-center justify-between py-1 text-sm"><span class="text-tx">${name}</span><span class="font-mono text-tx2">${fc(svcPrice(id, cfg))}</span></div>`;
+      }).join('')}
+      ${(j.addS || []).map(a => `<div class="flex items-center justify-between py-1 text-sm"><span class="text-tx">${a.name} ×${a.qty}</span><span class="font-mono text-tx2">${fc(a.price * a.qty)}</span></div>`).join('')}
+    </div>
+    ${j.tyres.length ? `<div class="bg-b2 border border-brd rounded-2xl p-5 mb-4"><h3 class="text-sm font-semibold text-tx mb-3">Tyres</h3>${j.tyres.map(ty => `<div class="flex items-center justify-between py-1 text-sm"><span class="text-tx">${ty.sz} ${ty.mdl} (${ty.mfg}) ×${ty.qty}</span><span class="font-mono text-accent">${fc(ty.pr * ty.qty)}</span></div>`).join('')}</div>` : ''}
+    ${j.notes ? `<div class="bg-b2 border border-brd rounded-2xl p-5 mb-4"><h3 class="text-sm font-semibold text-tx mb-2">Mechanic Observation</h3><p class="text-sm text-tx2">${j.notes}</p></div>` : ''}
+    <div class="bg-b2 border border-accent/20 rounded-2xl p-5 mb-4">
+      <h3 class="text-sm font-semibold text-tx mb-3">Cost Breakdown</h3>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-tx2">Services</span><span class="font-mono">${fc(Math.round(t.ss))}</span></div>
+        <div class="flex justify-between"><span class="text-tx2">Tyres</span><span class="font-mono">${fc(Math.round(t.ts))}</span></div>
+        <div class="flex justify-between"><span class="text-tx2">CGST</span><span class="font-mono">${fc(Math.round(t.cgs + t.cgt))}</span></div>
+        <div class="flex justify-between"><span class="text-tx2">SGST</span><span class="font-mono">${fc(Math.round(t.sgs + t.sgt))}</span></div>
+        <div class="gline my-2"></div>
+        <div class="flex justify-between text-base"><span class="font-bold text-tx">Total</span><span class="font-bold font-mono text-accent">${fc(Math.round(t.tot))}</span></div>
+      </div>
+    </div>
+    <div class="flex gap-3 flex-wrap">
+      ${j.st === 'ready' || j.st === 'completed' ? `<button class="bp flex-1" data-action="genInv" data-id="${j.id}"><i class="fas fa-file-invoice-dollar mr-2"></i>Generate Invoice</button>` : ''}
+      ${j.st !== 'completed' ? `<button class="bs flex-1" data-action="mvJD" data-id="${j.id}"><i class="fas fa-arrow-right mr-2"></i>Move to ${so[Math.min(3, idx + 1)].replace('-', ' ')}</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function rInvoice() {
+  const j = S.ej;
+  if (!j) return '<div>No data</div>';
+  const c = custs.find(x => x.id === j.cid) || {name:'Walk-in', ph:'', reg:j.reg || '', veh:j.veh || ''};
+  const t = calc(j);
+  const isEstimate = j.docType === 'estimate';
+  const items = lineItemsFromJob(j);
+  const stageFill = isEstimate ? '41%' : '74%';
+  if (isEstimate) {
+    return `<div class="est-shell">
+      <div class="flex items-center justify-between mb-6 nop flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <button class="w-10 h-10 rounded-xl bg-b3 border border-brd flex items-center justify-center text-tx2 hover:text-tx" data-action="navDash"><i class="fas fa-arrow-left text-sm"></i></button>
+          <div>
+            <h1 class="text-[32px] leading-none font-bold text-tx">Service Estimation</h1>
+            <p class="text-sm text-tx2 mt-2">Review estimate before customer approval</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="est-pill"><i class="fas fa-file-invoice text-accent"></i>${j.invId || 'EST-' + j.id}</span>
+          <button class="bs text-sm py-2" onclick="window.print()"><i class="fas fa-print mr-2"></i>Print Estimate</button>
+        </div>
+      </div>
+
+      <div class="est-card p-6 md:p-7 mb-6 nop">
+        <div class="grid md:grid-cols-4 gap-4">
+          <div class="est-step done">
+            <div class="est-bubble">1</div>
+            <div><div>Customer</div><small>Captured</small></div>
+          </div>
+          <div class="est-step done">
+            <div class="est-bubble">2</div>
+            <div><div>Job Card</div><small>Created</small></div>
+          </div>
+          <div class="est-step active">
+            <div class="est-bubble">3</div>
+            <div><div>Estimate</div><small>Ready now</small></div>
+          </div>
+          <div class="est-step">
+            <div class="est-bubble">4</div>
+            <div><div>Approval</div><small>Pending</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="est-card p-6 md:p-7 mb-6">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div class="text-[30px] font-bold text-tx">Service Estimation</div>
+            <div class="text-sm text-tx2 mt-2">Prepared for ${c.name || 'Walk-in Customer'}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs uppercase tracking-[0.2em] text-tx2 mb-2">Grand Total</div>
+            <div class="text-[40px] font-bold text-[#ffc329] leading-none">${fc(Math.round(t.tot))}</div>
+          </div>
+        </div>
+        <div class="gline my-6"></div>
+        <div class="grid md:grid-cols-4 gap-5">
+          <div><div class="text-[11px] uppercase tracking-[0.18em] text-tx2 mb-2">Job ID</div><div class="text-2xl font-bold text-tx">JOB-${j.id}</div></div>
+          <div><div class="text-[11px] uppercase tracking-[0.18em] text-tx2 mb-2">Estimate No.</div><div class="text-2xl font-bold text-tx">${j.invId || ('EST-' + j.id)}</div></div>
+          <div><div class="text-[11px] uppercase tracking-[0.18em] text-tx2 mb-2">Customer</div><div class="text-2xl font-bold text-tx">${c.name || 'Walk-in Customer'}</div></div>
+          <div><div class="text-[11px] uppercase tracking-[0.18em] text-tx2 mb-2">Vehicle No.</div><div class="text-2xl font-bold text-tx">${c.reg || j.reg || 'N/A'}</div></div>
+        </div>
+      </div>
+
+      <div class="est-card p-6 md:p-7 mb-6 nop">
+        <div class="est-timeline">
+          <div class="est-timeline-fill" style="width:${stageFill}"></div>
+          <div class="est-node done">
+            <div class="ring"><i class="fas fa-check"></i></div>
+            <div class="label">Job Created</div>
+            <div class="meta">${ft(j.at)}</div>
+          </div>
+          <div class="est-node active">
+            <div class="ring"><i class="fas fa-file-invoice"></i></div>
+            <div class="label">Estimate</div>
+            <div class="meta">${ft(j.invAt || new Date())}</div>
+          </div>
+          <div class="est-node">
+            <div class="ring"><i class="fas fa-wrench"></i></div>
+            <div class="label">In Progress</div>
+            <div class="meta">Est. ${Math.max(1, Math.round(estMinutes(j) / 60))} Hr</div>
+          </div>
+          <div class="est-node">
+            <div class="ring"><i class="fas fa-flag-checkered"></i></div>
+            <div class="label">Ready</div>
+            <div class="meta">Est. ${ft(new Date(new Date(j.at).getTime() + estMinutes(j) * 60000))}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="est-card p-6 md:p-7">
+        <div class="overflow-x-auto">
+          <table class="w-full est-table min-w-[760px]">
+            <thead>
+              <tr>
+                <th class="text-left pb-4">Item</th>
+                <th class="text-right pb-4">HSN</th>
+                <th class="text-right pb-4">Qty</th>
+                <th class="text-right pb-4">Rate</th>
+                <th class="text-right pb-4">GST</th>
+                <th class="text-right pb-4">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `<tr>
+                <td class="text-tx font-semibold">${item.name}</td>
+                <td class="text-right text-tx2 font-mono">${item.hsn}</td>
+                <td class="text-right text-tx font-semibold">${item.qty}</td>
+                <td class="text-right text-tx font-semibold">${fc(Math.round(item.rate))}</td>
+                <td class="text-right text-tx font-semibold">${item.gst}%</td>
+                <td class="text-right text-tx font-bold">${fc(Math.round(item.total))}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <div class="w-full md:w-[320px] rounded-2xl border border-[#303749] bg-[#171c25] p-5">
+            <div class="text-2xl font-bold text-tx mb-4">GST Summary</div>
+            <div class="space-y-2 text-[15px]">
+              <div class="flex justify-between text-tx2"><span>Sub Total</span><span class="font-semibold text-tx">${fc(Math.round(t.ss + t.ts))}</span></div>
+              <div class="flex justify-between text-tx2"><span>CGST (9% + 14%)</span><span class="font-semibold text-tx">${fc(Math.round(t.cgs + t.cgt))}</span></div>
+              <div class="flex justify-between text-tx2"><span>SGST (9% + 14%)</span><span class="font-semibold text-tx">${fc(Math.round(t.sgs + t.sgt))}</span></div>
+              <div class="border-t border-white/10 pt-3 mt-3 flex justify-between text-[28px] font-bold">
+                <span class="text-tx">Grand Total</span>
+                <span class="text-[#ffc329]">${fc(Math.round(t.tot))}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="est-actions nop">
+        <button class="bs text-base py-3 px-8" data-action="modEstimate"><i class="fas fa-pen mr-2"></i>Modify</button>
+        <button class="bp text-base py-3 px-8" data-action="sendApproval" data-id="${j.id}">Send for Approval <i class="fas fa-paper-plane ml-2"></i></button>
+      </div>
+    </div>`;
+  }
+  return `<div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-6 nop flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+        <button class="w-9 h-9 rounded-lg bg-b3 flex items-center justify-center text-tx2 hover:text-tx" data-action="navDash"><i class="fas fa-arrow-left text-sm"></i></button>
+        <h1 class="text-xl font-bold text-tx">Invoice Generated</h1>
+      </div>
+      <button class="bp text-sm" onclick="window.print()"><i class="fas fa-print mr-2"></i>Print Invoice</button>
+    </div>
+    <div class="bg-white text-gray-900 rounded-2xl p-8 pon" style="display:block">
+      <div class="flex items-start justify-between mb-8">
+        <div>
+          <div class="text-2xl font-bold text-orange-600">WheelPro</div>
+          <div class="text-xs text-gray-500 mt-1">GSTIN: 07AABCW1234F1ZD</div>
+        </div>
+        <div class="text-right">
+          <div class="text-lg font-bold">TAX INVOICE</div>
+          <div class="text-sm text-gray-600 font-mono">${j.invId || 'N/A'}</div>
+          <div class="text-xs text-gray-500">Date: ${fd(j.invAt || new Date())}</div>
+        </div>
+      </div>
+      <div class="border border-gray-200 rounded-lg p-4 mb-6">
+        <div class="text-xs font-semibold text-gray-500 uppercase mb-2">Bill To</div>
+        <div class="text-sm font-bold">${c.name}</div>
+        <div class="text-xs text-gray-600">Phone: ${c.ph || '—'}</div>
+        <div class="text-xs text-gray-600">Vehicle: ${c.veh || j.veh} | ${c.reg || j.reg}</div>
+      </div>
+      <table class="w-full text-sm mb-6">
+        <thead>
+          <tr class="border-b-2 border-gray-200">
+            <th class="text-left py-2 text-xs font-semibold text-gray-500">#</th>
+            <th class="text-left py-2 text-xs font-semibold text-gray-500">Description</th>
+            <th class="text-left py-2 text-xs font-semibold text-gray-500">HSN/SAC</th>
+            <th class="text-right py-2 text-xs font-semibold text-gray-500">Qty</th>
+            <th class="text-right py-2 text-xs font-semibold text-gray-500">Rate</th>
+            <th class="text-right py-2 text-xs font-semibold text-gray-500">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item, i) => `<tr class="border-b border-gray-100"><td class="py-2">${i + 1}</td><td class="py-2">${item.name}</td><td class="py-2 font-mono text-xs">${item.hsn}</td><td class="py-2 text-right">${item.qty}</td><td class="py-2 text-right font-mono">${item.rate}</td><td class="py-2 text-right font-mono">${item.base}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="flex justify-end">
+        <div class="w-72">
+          <div class="flex justify-between py-1 text-sm"><span class="text-gray-500">Subtotal</span><span class="font-mono">${fc(Math.round(t.ss + t.ts))}</span></div>
+          <div class="flex justify-between py-1 text-sm"><span class="text-gray-500">CGST</span><span class="font-mono">${fc(Math.round(t.cgs + t.cgt))}</span></div>
+          <div class="flex justify-between py-1 text-sm"><span class="text-gray-500">SGST</span><span class="font-mono">${fc(Math.round(t.sgs + t.sgt))}</span></div>
+          <div class="border-t-2 border-gray-900 mt-2 pt-2 flex justify-between text-lg font-bold"><span>Grand Total</span><span class="font-mono">${fc(Math.round(t.tot))}</span></div>
+        </div>
+      </div>
+      <div class="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">Thank you for your business. — WheelPro</div>
+    </div>
+    <div class="nop mt-4 flex gap-3 flex-wrap">
+      <button class="bp flex-1" data-action="payModal" data-id="${j.id}"><i class="fas fa-credit-card mr-2"></i>Process Payment</button>
+      <button class="bs flex-1" data-action="navDash"><i class="fas fa-home mr-2"></i>Back to Dashboard</button>
+    </div>
+  </div>`;
+}
+
+function rInv() {
+  const q = S.invF.toLowerCase();
+  const f = INV.filter(t => !q || t.sz.toLowerCase().includes(q) || t.mdl.toLowerCase().includes(q) || t.mfg.toLowerCase().includes(q));
+  return `<div>
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="text-xl font-bold text-tx">Inventory</h1>
+        <p class="text-sm text-tx2">${f.length} items · ${f.reduce((s, t) => s + t.stk, 0)} units</p>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-tx2 text-sm"></i>
+          <input class="inf pl-10 py-2 text-sm w-64" placeholder="Search tyres..." value="${S.invF}" oninput="S.invF=this.value;render()">
+        </div>
+        <button class="bp text-sm py-2" data-action="siModal"><i class="fas fa-plus mr-1"></i>Stock In</button>
+      </div>
+    </div>
+    <div class="grid lg:grid-cols-3 gap-4 mb-6">
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Total SKUs</div><div class="text-2xl font-bold font-mono text-tx">${f.length}</div></div>
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Total Units</div><div class="text-2xl font-bold font-mono text-tx">${f.reduce((s, t) => s + t.stk, 0)}</div></div>
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Stock Value</div><div class="text-2xl font-bold font-mono text-accent">${fc(f.reduce((s, t) => s + t.pr * t.stk, 0))}</div></div>
+    </div>
+    <div class="bg-b2 border border-brd rounded-2xl overflow-hidden overflow-x-auto">
+      <table class="w-full text-sm min-w-[720px]">
+        <thead><tr class="border-b border-brd bg-b3"><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Size</th><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Model</th><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Manufacturer</th><th class="text-right py-3 px-4 text-xs font-semibold text-tx2">Price</th><th class="text-right py-3 px-4 text-xs font-semibold text-tx2">Stock</th><th class="text-center py-3 px-4 text-xs font-semibold text-tx2">HSN</th></tr></thead>
+        <tbody>
+          ${f.map(t => `<tr class="border-b border-brd/50 hover:bg-b3/50"><td class="py-3 px-4 font-mono font-medium text-tx">${t.sz}</td><td class="py-3 px-4 text-tx">${t.mdl}</td><td class="py-3 px-4 text-tx2">${t.mfg}</td><td class="py-3 px-4 text-right font-mono text-tx">${fc(t.pr)}</td><td class="py-3 px-4 text-right font-mono ${t.stk <= 3 ? 'text-err' : 'text-tx'}">${t.stk}${t.stk <= 3 ? ' <i class="fas fa-exclamation-triangle text-[10px]"></i>' : ''}</td><td class="py-3 px-4 text-center text-xs font-mono text-tx2">${t.hsn}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function rCust() {
+  const q = S.cstF.toLowerCase();
+  const f = custs.filter(c => !q || c.name.toLowerCase().includes(q) || c.ph.includes(q) || c.reg.toLowerCase().includes(q));
+  return `<div>
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="text-xl font-bold text-tx">Customers</h1>
+        <p class="text-sm text-tx2">${f.length} customers</p>
+      </div>
+      <div class="relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-tx2 text-sm"></i>
+        <input class="inf pl-10 py-2 text-sm w-64" placeholder="Search..." value="${S.cstF}" oninput="S.cstF=this.value;render()">
+      </div>
+    </div>
+    <div class="bg-b2 border border-brd rounded-2xl overflow-hidden overflow-x-auto">
+      <table class="w-full text-sm min-w-[720px]">
+        <thead><tr class="border-b border-brd bg-b3"><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Name</th><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Phone</th><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Vehicle</th><th class="text-left py-3 px-4 text-xs font-semibold text-tx2">Reg No</th><th class="text-right py-3 px-4 text-xs font-semibold text-tx2">Total Spent</th></tr></thead>
+        <tbody>
+          ${f.map(c => {
+            const sp = jobs.filter(j => j.cid === c.id && j.st === 'completed').reduce((s, j) => s + calc(j).tot, 0);
+            return `<tr class="border-b border-brd/50 hover:bg-b3/50 cursor-pointer" data-action="cHist" data-id="${c.id}"><td class="py-3 px-4 font-medium text-tx">${c.name}</td><td class="py-3 px-4 font-mono text-tx2">${c.ph}</td><td class="py-3 px-4 text-tx2">${c.veh}</td><td class="py-3 px-4 font-mono text-tx">${c.reg}</td><td class="py-3 px-4 text-right font-mono text-accent">${fc(Math.round(sp))}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function rRep() {
+  const cp = jobs.filter(j => j.st === 'completed');
+  const rv = cp.reduce((s, j) => s + calc(j).tot, 0);
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    const dj = cp.filter(j => new Date(j.at).toDateString() === d.toDateString());
+    days.push({
+      date:d.toLocaleDateString('en-IN', {weekday:'short', day:'numeric'}),
+      jobs:dj.length,
+      rev:dj.reduce((s, j) => s + calc(j).tot, 0)
+    });
+  }
+  const mx = Math.max(...days.map(d => d.rev), 1);
+  return `<div>
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div><h1 class="text-xl font-bold text-tx">Reports</h1><p class="text-sm text-tx2">Last 7 Days</p></div>
+      <button class="bs text-sm py-2" onclick="window.print()"><i class="fas fa-print mr-1"></i>Print</button>
+    </div>
+    <div class="grid xl:grid-cols-4 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Total Revenue</div><div class="text-2xl font-bold font-mono text-accent">${fc(Math.round(rv))}</div></div>
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Completed Jobs</div><div class="text-2xl font-bold font-mono text-tx">${cp.length}</div></div>
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Avg. Job Value</div><div class="text-2xl font-bold font-mono text-tx">${cp.length ? fc(Math.round(rv / cp.length)) : '₹0'}</div></div>
+      <div class="bg-b2 border border-brd rounded-xl p-4"><div class="text-xs text-tx2 mb-1">Active Jobs</div><div class="text-2xl font-bold font-mono text-info">${jobs.filter(j => j.st !== 'completed').length}</div></div>
+    </div>
+    <div class="bg-b2 border border-brd rounded-2xl p-6 mb-6">
+      <h3 class="text-sm font-semibold text-tx mb-4">Revenue — Last 7 Days</h3>
+      <div class="flex items-end gap-3 h-48 overflow-x-auto">${days.map(d => `<div class="flex-1 min-w-[72px] flex flex-col items-center gap-1"><div class="text-[10px] font-mono text-accent">${d.rev > 0 ? fc(Math.round(d.rev)) : '—'}</div><div class="w-full rounded-t-lg" style="height:${Math.max(4, d.rev / mx * 100)}%;background:linear-gradient(to top,#f97316,#fb923c)"></div><div class="text-[10px] text-tx2">${d.date}</div><div class="text-[10px] font-mono text-tx2">${d.jobs} jobs</div></div>`).join('')}</div>
+    </div>
+    <div class="grid lg:grid-cols-2 gap-4">
+      <div class="bg-b2 border border-brd rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-tx mb-3">Job Status</h3>
+        <div class="space-y-3">${['waiting', 'in-progress', 'ready', 'completed'].map(s => {
+          const cnt = jobs.filter(j => j.st === s).length;
+          const pct = jobs.length ? Math.round(cnt / jobs.length * 100) : 0;
+          const cl = {waiting:'bg-warn', 'in-progress':'bg-info', ready:'bg-ok', completed:'bg-purple-500'}[s];
+          return `<div><div class="flex items-center justify-between mb-1"><span class="text-xs text-tx capitalize">${s.replace('-', ' ')}</span><span class="text-xs font-mono text-tx2">${cnt} (${pct}%)</span></div><div class="h-2 bg-b4 rounded-full overflow-hidden"><div class="${cl} h-full rounded-full" style="width:${pct}%"></div></div></div>`;
+        }).join('')}</div>
+      </div>
+      <div class="bg-b2 border border-brd rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-tx mb-3">Inventory Alerts</h3>
+        <div class="space-y-2">${INV.filter(t => t.stk <= 4).map(t => `<div class="flex items-center justify-between text-xs"><span class="text-tx">${t.sz} ${t.mdl}</span><span class="font-mono ${t.stk <= 2 ? 'text-err' : 'text-warn'}">${t.stk} left</span></div>`).join('')}${INV.every(t => t.stk > 4) ? '<div class="text-center py-4 text-tx2 text-xs">All stock healthy</div>' : ''}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('mc').addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const act = btn.dataset.action;
+  const id = btn.dataset.id;
+
+  if (act === 'navDash') return nav('dashboard');
+  if (act === 'startJC') {
+    S.memo = btn.dataset.memo === '1';
+    S.step = 1;
+    S.nj = makeNewJob();
+    S.selTyre = null;
+    S.tq = 1;
+    return nav('job-create');
+  }
+  if (act === 'viewJ' || act === 'viewJHist') {
+    S.ej = jobs.find(j => j.id == id);
+    document.getElementById('modal').innerHTML = '';
+    return nav('job-detail');
+  }
+  if (act === 'mvJ') {
+    const j = jobs.find(x => x.id == id);
+    if (!j) return;
+    const so = ['waiting', 'in-progress', 'ready', 'completed'];
+    const ni = so.indexOf(j.st) + parseInt(btn.dataset.dir, 10);
+    if (ni >= 0 && ni <= 3) {
+      j.st = so[ni];
+      toast(`Job #${id} → ${j.st.replace('-', ' ')}`);
+    }
+    return render();
+  }
+  if (act === 'mvJD') {
+    const j = jobs.find(x => x.id == id);
+    if (!j) return;
+    const so = ['waiting', 'in-progress', 'ready', 'completed'];
+    const ni = so.indexOf(j.st) + 1;
+    if (ni <= 3) {
+      j.st = so[ni];
+      toast(`Job #${id} → ${j.st.replace('-', ' ')}`);
+    }
+    S.ej = j;
+    return render();
+  }
+  if (act === 'backS1') {
+    S.step = 1;
+    return render();
+  }
+  if (act === 'goS2') {
+    const n = S.nj;
+    n.nm = document.getElementById('jNm')?.value || n.nm;
+    n.ph = document.getElementById('jPh')?.value || n.ph;
+    n.veh = document.getElementById('jVeh')?.value || n.veh;
+    n.reg = (document.getElementById('jReg')?.value || n.reg).toUpperCase();
+    n.km = document.getElementById('jKm')?.value || n.km;
+    if (!S.memo && (!n.nm.trim() || !n.ph.trim() || n.ph.length < 10)) return toast('Name and valid phone required', 'err');
+    if (!n.veh.trim() || !n.reg.trim()) return toast('Vehicle and registration required', 'err');
+    if (!n.cid && n.nm) {
+      const ex = custs.find(c => c.ph === n.ph);
+      if (!ex) {
+        const nc = {id:nxC++, name:n.nm, ph:n.ph, veh:n.veh, reg:n.reg, km:parseInt(n.km, 10) || 0};
+        custs.push(nc);
+        n.cid = nc.id;
+      } else {
+        n.cid = ex.id;
+      }
+    }
+    S.step = 2;
+    return render();
+  }
+  if (act === 'tSvc') {
+    S.nj.svc[id].en = !S.nj.svc[id].en;
+    return render();
+  }
+  if (act === 'sCfg') {
+    S.nj.svc[btn.dataset.id][btn.dataset.k] = btn.dataset.v === '0' ? false : btn.dataset.v === '1' ? true : btn.dataset.v;
+    return render();
+  }
+  if (act === 'sCfgN') {
+    const cfg = S.nj.svc[btn.dataset.id];
+    cfg.count = Math.max(0, (cfg.count || 0) + parseInt(btn.dataset.d, 10));
+    return render();
+  }
+  if (act === 'sCfgM') {
+    S.nj.svc[btn.dataset.id].mech = btn.value;
+    return;
+  }
+  if (act === 'tPos') {
+    const arr = S.nj.svc[btn.dataset.id].positions;
+    const p = btn.dataset.p;
+    const i = arr.indexOf(p);
+    if (i >= 0) arr.splice(i, 1);
+    else arr.push(p);
+    return render();
+  }
+  if (act === 'aAS') {
+    S.nj.addS.push({name:'', price:0, qty:1});
+    return render();
+  }
+  if (act === 'rAS') {
+    S.nj.addS.splice(btn.dataset.i, 1);
+    return render();
+  }
+  if (act === 'uASq') {
+    const a = S.nj.addS[btn.dataset.i];
+    a.qty = Math.max(1, a.qty + parseInt(btn.dataset.d, 10));
+    return render();
+  }
+  if (act === 'fMod') {
+    const s = document.getElementById('tSz').value;
+    const m = document.getElementById('tMd');
+    m.innerHTML = '<option value="">Select model</option>';
+    document.getElementById('tMf').innerHTML = '<option value="">Select manufacturer</option>';
+    document.getElementById('tPB').classList.add('hidden');
+    if (!s) return;
+    [...new Set(INV.filter(t => t.sz === s).map(t => t.mdl))].forEach(x => {
+      const o = document.createElement('option');
+      o.textContent = x;
+      m.appendChild(o);
+    });
+    S.selTyre = null;
+    S.tq = 1;
+    return;
+  }
+  if (act === 'fMfg') {
+    const s = document.getElementById('tSz').value;
+    const md = document.getElementById('tMd').value;
+    const m = document.getElementById('tMf');
+    m.innerHTML = '<option value="">Select manufacturer</option>';
+    document.getElementById('tPB').classList.add('hidden');
+    if (!md) return;
+    [...new Set(INV.filter(t => t.sz === s && t.mdl === md).map(t => t.mfg))].forEach(x => {
+      const o = document.createElement('option');
+      o.textContent = x;
+      m.appendChild(o);
+    });
+    S.selTyre = null;
+    S.tq = 1;
+    return;
+  }
+  if (act === 'uTP') {
+    const s = document.getElementById('tSz').value;
+    const md = document.getElementById('tMd').value;
+    const mf = document.getElementById('tMf').value;
+    if (!s || !md || !mf) {
+      document.getElementById('tPB').classList.add('hidden');
+      return;
+    }
+    const t = INV.find(x => x.sz === s && x.mdl === md && x.mfg === mf);
+    if (!t) {
+      document.getElementById('tPB').classList.add('hidden');
+      return;
+    }
+    document.getElementById('tPB').classList.remove('hidden');
+    document.getElementById('tPr').textContent = fc(t.pr);
+    document.getElementById('tSt').textContent = t.stk;
+    S.tq = 1;
+    document.getElementById('tQy').textContent = '1';
+    S.selTyre = t;
+    const ij = S.nj.tyres.filter(x => x.id === t.id).reduce((sum, x) => sum + x.qty, 0);
+    document.getElementById('tAf').textContent = 'After: ' + (t.stk - ij - S.tq) + ' avail';
+    return;
+  }
+  if (act === 'cTQ') {
+    S.tq = Math.max(1, Math.min(S.tq + parseInt(btn.dataset.d, 10), (S.selTyre?.stk || 99)));
+    document.getElementById('tQy').textContent = S.tq;
+    if (S.selTyre) {
+      const ij = S.nj.tyres.filter(x => x.id === S.selTyre.id).reduce((sum, x) => sum + x.qty, 0);
+      document.getElementById('tAf').textContent = 'After: ' + (S.selTyre.stk - ij - S.tq) + ' avail';
+    }
+    return;
+  }
+  if (act === 'addTy') {
+    if (!S.selTyre) return;
+    const t = S.selTyre;
+    const existing = S.nj.tyres.find(x => x.id === t.id);
+    if (existing) existing.qty += S.tq;
+    else S.nj.tyres.push({...t, qty:S.tq});
+    toast(`Added ${S.tq}× ${t.sz} ${t.mdl}`);
+    return render();
+  }
+  if (act === 'rmTy') {
+    S.nj.tyres.splice(btn.dataset.i, 1);
+    return render();
+  }
+  if (act === 'togRec') {
+    if (isR) stopR();
+    else startR();
+    return;
+  }
+  if (act === 'playR') {
+    const r = S.nj.recs[btn.dataset.i];
+    if (r) new Audio(r.url).play();
+    return;
+  }
+  if (act === 'delR') {
+    S.nj.recs.splice(btn.dataset.i, 1);
+    return render();
+  }
+  if (act === 'saveJ' || act === 'confJ') {
+    const j = S.nj;
+    j.notes = document.getElementById('jNotes')?.value || '';
+    if (act === 'confJ') {
+      const hs = Object.values(j.svc).some(v => v && v.en);
+      if (!hs && !j.tyres.length && !j.addS.length) return toast('Add at least one service or tyre', 'err');
+    }
+    const es = Object.entries(j.svc).filter(([, v]) => v && v.en).map(([k]) => k);
+    const savedSvcCfg = {};
+    es.forEach(k => { savedSvcCfg[k] = {...j.svc[k], positions:[...(j.svc[k].positions || [])]}; });
+    const mc = primaryMechanic(j);
+    if (!j.cid && j.nm) {
+      const ex = custs.find(c => c.ph === j.ph);
+      if (!ex) {
+        const nc = {id:nxC++, name:j.nm, ph:j.ph, veh:j.veh, reg:j.reg, km:parseInt(j.km, 10) || 0};
+        custs.push(nc);
+        j.cid = nc.id;
+      } else {
+        j.cid = ex.id;
+      }
+    }
+    const newJob = {
+      id:nxJ++,
+      cid:j.cid,
+      st:'waiting',
+      svcs:es,
+      svcCfg:savedSvcCfg,
+      tyres:j.tyres.map(t => ({...t})),
+      mech:mc,
+      notes:j.notes,
+      at:new Date(),
+      memo:S.memo,
+      veh:j.veh,
+      reg:j.reg,
+      addS:j.addS.map(a => ({...a})),
+      recs:j.recs.map(r => ({...r}))
+    };
+    jobs.push(newJob);
+    toast(act === 'confJ' ? 'Job confirmed' : (btn.dataset.est === '1' ? 'Estimate generated' : 'Draft saved'));
+    if (btn.dataset.est === '1') {
+      S.ej = newJob;
+      newJob.invId = 'EST-' + Date.now().toString(36).toUpperCase();
+      newJob.invAt = new Date();
+      newJob.docType = 'estimate';
+      return nav('invoice');
+    }
+    return nav('dashboard');
+  }
+  if (act === 'modEstimate') {
+    if (S.ej) return nav('job-detail', {ej:S.ej});
+    return nav('dashboard');
+  }
+  if (act === 'sendApproval') {
+    const job = jobs.find(x => x.id == id);
+    if (job) job.approvalSentAt = new Date();
+    toast('Estimate sent for approval', 'ok');
+    return nav('dashboard');
+  }
+  if (act === 'genInv') {
+    const j = jobs.find(x => x.id == id);
+    if (!j) return;
+    j.st = 'completed';
+    j.invId = 'INV-' + Date.now().toString(36).toUpperCase();
+    j.invAt = new Date();
+    j.docType = 'invoice';
+    S.ej = j;
+    return nav('invoice');
+  }
+  if (act === 'payModal') {
+    const j = jobs.find(x => x.id == id);
+    if (!j) return;
+    const tot = calc(j).tot;
+    document.getElementById('modal').innerHTML = `<div class="mover" data-action="clModalBg"><div class="bg-b2 border border-brd rounded-2xl p-6 w-[440px] max-w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-tx">Process Payment</h3><button data-action="clModal" class="text-tx2 hover:text-tx"><i class="fas fa-times"></i></button></div><div class="text-center py-4"><div class="text-sm text-tx2">Amount Due</div><div class="text-3xl font-bold font-mono text-accent mt-1">${fc(Math.round(tot))}</div></div><div class="space-y-3 mb-4"><div><label class="text-xs text-tx2 mb-1 block">Payment Method</label><select class="inf text-sm" id="pMth"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option></select></div><div><label class="text-xs text-tx2 mb-1 block">Amount Received</label><input type="number" class="inf text-sm font-mono" id="pAmt" value="${Math.round(tot)}"></div></div><button class="bp w-full" data-action="compPay" data-id="${j.id}"><i class="fas fa-check mr-2"></i>Complete Payment</button></div></div>`;
+    return;
+  }
+  if (act === 'clModal' || act === 'clModalBg') {
+    if (act === 'clModalBg' && e.target !== btn) return;
+    document.getElementById('modal').innerHTML = '';
+    return;
+  }
+  if (act === 'compPay') {
+    const j = jobs.find(x => x.id == id);
+    if (j) {
+      j.paid = true;
+      j.payMeth = document.getElementById('pMth')?.value || 'Cash';
+      j.amtRcvd = parseFloat(document.getElementById('pAmt')?.value || calc(j).tot);
+    }
+    document.getElementById('modal').innerHTML = '';
+    toast('Payment completed');
+    return nav('dashboard');
+  }
+  if (act === 'siModal') {
+    document.getElementById('modal').innerHTML = `<div class="mover" data-action="clModalBg"><div class="bg-b2 border border-brd rounded-2xl p-6 w-[440px] max-w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-lg font-bold text-tx">Stock In</h3><button data-action="clModal" class="text-tx2 hover:text-tx"><i class="fas fa-times"></i></button></div><div class="space-y-3"><div><label class="text-xs text-tx2 mb-1 block">Tyre</label><select class="inf text-sm" id="siI">${INV.map(t => `<option value="${t.id}">${t.sz} ${t.mdl} (${t.mfg})</option>`).join('')}</select></div><div><label class="text-xs text-tx2 mb-1 block">Quantity</label><input type="number" class="inf text-sm font-mono" id="siQ" value="1" min="1"></div></div><button class="bp w-full mt-4" data-action="doSI"><i class="fas fa-plus mr-2"></i>Add Stock</button></div></div>`;
+    return;
+  }
+  if (act === 'doSI') {
+    const invId = parseInt(document.getElementById('siI').value, 10);
+    const q = parseInt(document.getElementById('siQ').value, 10) || 0;
+    const t = INV.find(x => x.id === invId);
+    if (t && q > 0) t.stk += q;
+    document.getElementById('modal').innerHTML = '';
+    toast(`Added ${q} units`);
+    return render();
+  }
+  if (act === 'cHist') {
+    const c = custs.find(x => x.id == id);
+    if (!c) return;
+    const cj = jobs.filter(j => j.cid === c.id);
+    document.getElementById('modal').innerHTML = `<div class="mover" data-action="clModalBg"><div class="bg-b2 border border-brd rounded-2xl p-6 w-[560px] max-h-[80vh] overflow-y-auto max-w-full"><div class="flex items-center justify-between mb-4"><div><h3 class="text-lg font-bold text-tx">${c.name}</h3><p class="text-sm text-tx2">${c.ph} · ${c.veh}</p></div><button data-action="clModal" class="text-tx2 hover:text-tx"><i class="fas fa-times"></i></button></div><h4 class="text-sm font-semibold text-tx2 mb-2">History (${cj.length})</h4><div class="space-y-2">${cj.length === 0 ? '<div class="text-center py-6 text-tx2 text-xs">No jobs</div>' : cj.map(j => `<div class="bg-b3 rounded-xl p-3 flex items-center justify-between cursor-pointer hover:bg-b4" data-action="viewJHist" data-id="${j.id}"><div><div class="text-sm font-medium text-tx">Job #${j.id}</div><div class="text-xs text-tx2">${fd(j.at)}</div></div><div class="text-right"><span class="bdg bdg-${j.st}">${j.st}</span><div class="text-xs font-mono text-accent mt-1">${fc(Math.round(calc(j).tot))}</div></div></div>`).join('')}</div></div></div>`;
+    return;
+  }
+  if (act === 'pickC') {
+    const c = custs.find(x => x.id == id);
+    if (c) {
+      S.nj.cid = c.id;
+      S.nj.nm = c.name;
+      S.nj.ph = c.ph;
+      S.nj.veh = c.veh;
+      S.nj.reg = c.reg;
+      S.nj.km = c.km;
+      render();
+    }
+  }
+});
+
+document.getElementById('mc').addEventListener('change', function(e) {
+  const el = e.target;
+  if (el.dataset.action === 'uAS') {
+    const i = parseInt(el.dataset.i, 10);
+    if (el.dataset.k === 'name') S.nj.addS[i].name = el.value;
+    if (el.dataset.k === 'price') S.nj.addS[i].price = parseFloat(el.value) || 0;
+  }
+  if (el.dataset.action === 'sCfgM') {
+    S.nj.svc[el.dataset.id].mech = el.value;
+  }
+});
+
+document.getElementById('sideNav').addEventListener('click', function(e) {
+  const item = e.target.closest('.sb-item');
+  if (!item) return;
+  nav(item.dataset.v);
+});
+
+document.querySelector('.mobnav').addEventListener('click', function(e) {
+  const item = e.target.closest('[data-v]');
+  if (!item) return;
+  nav(item.dataset.v);
+});
+
+document.getElementById('gSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const sr = document.getElementById('gResults');
+  if (q.length < 2) {
+    sr.classList.add('hidden');
+    return;
+  }
+  const r = custs.filter(c => c.name.toLowerCase().includes(q) || c.ph.includes(q) || c.reg.toLowerCase().includes(q));
+  if (!r.length) {
+    sr.classList.add('hidden');
+    return;
+  }
+  sr.classList.remove('hidden');
+  sr.innerHTML = r.map(c => `<div class="px-4 py-3 hover:bg-b4 cursor-pointer text-sm" data-action="gSrcC" data-id="${c.id}"><span class="text-tx font-medium">${c.name}</span> <span class="text-tx2 text-xs ml-2">${c.ph} · ${c.reg}</span></div>`).join('');
+});
+
+document.getElementById('gResults').addEventListener('click', function(e) {
+  const item = e.target.closest('[data-action="gSrcC"]');
+  if (!item) return;
+  const job = jobs.find(j => j.cid == item.dataset.id);
+  if (job) {
+    S.ej = job;
+    nav('job-detail');
+  } else {
+    toast('No jobs found for this customer', 'info');
+  }
+  document.getElementById('gSearch').value = '';
+  this.classList.add('hidden');
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#gSearch') && !e.target.closest('#gResults')) document.getElementById('gResults')?.classList.add('hidden');
+  if (!e.target.closest('#cSrc') && !e.target.closest('#cDrop')) document.getElementById('cDrop')?.classList.add('hidden');
+});
+
+function srcC(q) {
+  const d = document.getElementById('cDrop');
+  if (!q || q.length < 2) {
+    d.classList.add('hidden');
+    return;
+  }
+  const r = custs.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.ph.includes(q));
+  if (!r.length) {
+    d.classList.add('hidden');
+    return;
+  }
+  d.classList.remove('hidden');
+  d.innerHTML = r.map(c => `<div class="px-4 py-3 hover:bg-b4 cursor-pointer" data-action="pickC" data-id="${c.id}"><div class="text-sm font-medium text-tx">${c.name}</div><div class="text-xs text-tx2">${c.ph} · ${c.veh} · ${c.reg}</div></div>`).join('');
+}
+
+let mRec = null, rChks = [], rSt = 0, isR = false;
+function startR() {
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st => {
+    mRec = new MediaRecorder(st);
+    rChks = [];
+    mRec.ondataavailable = e => rChks.push(e.data);
+    mRec.onstop = () => {
+      const d = Math.round((Date.now() - rSt) / 1000);
+      const u = URL.createObjectURL(new Blob(rChks, {type:'audio/webm'}));
+      S.nj.recs.push({url:u, dur:d});
+      st.getTracks().forEach(t => t.stop());
+      isR = false;
+      render();
+      toast('Recording saved');
+    };
+    mRec.start();
+    rSt = Date.now();
+    isR = true;
+    const b = document.getElementById('recBtn');
+    if (b) b.innerHTML = '<span class="rdot inline-block w-2 h-2 rounded-full bg-err mr-1"></span>Stop';
+  }).catch(() => toast('Mic access denied', 'err'));
+}
+
+function stopR() {
+  if (mRec && mRec.state === 'recording') mRec.stop();
+}
+
+setInterval(() => {
+  const e = document.getElementById('clock');
+  if (e) e.textContent = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}, 1000);
+
+document.getElementById('branchSel').addEventListener('change', e => toast('Switched to ' + e.target.value, 'info'));
+
+render();
+</script>
+</body>
+</html>
